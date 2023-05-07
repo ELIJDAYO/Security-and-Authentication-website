@@ -1,0 +1,12 @@
+instead of versioning control with github, git can do the job done
+just do "git log" and result will appear as follow
+    commit 92a07aa559eb29e5c9c0f50304e7b5e0674a25d1
+    Add Environment Vars
+    
+    commit 1702e1d3f75bfbeb0e43848c8bd921863ea21147
+    Level 2 - Encryption
+    
+    commit 7078af837299a4ff50121d67afe17d9fa522ec68
+    Level 1 - Username and Password Only
+"git checkout 7078af837299a4ff50121d67afe17d9fa522ec68 ."
+to see the code version
