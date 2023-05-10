@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/ELIJDAYO/Security-and-Authentication-website#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.9",

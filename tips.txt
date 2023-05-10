@@ -10,3 +10,12 @@ just do "git log" and result will appear as follow
     Level 1 - Username and Password Only
 "git checkout 7078af837299a4ff50121d67afe17d9fa522ec68 ."
 to see the code version
+
+salting and hashing module:
+    update node version?
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+    install stable version
+        nvm install <stable version>
+    
+    npm install bcryptjs
+

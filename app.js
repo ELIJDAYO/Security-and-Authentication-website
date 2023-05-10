@@ -4,7 +4,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const md5 = require('md5');
+const bcrypt = require('bcryptjs');
+const saltRounds = 10;
+
+main().catch((err) => console.log('err'));
+
 const app = express();
 
 // set templating engine
@@ -19,9 +23,9 @@ app.use(
 // use public folder to store static file like css and img
 app.use(express.static('public'));
 
-mongoose.connect('mongodb://127.0.0.1:27017/udemyUserDB', {
-  useNewUrlParser: true,
-});
+async function main() {
+  await mongoose.connect('mongodb://127.0.0.1:27017/userDB');
+}
 const userSchema = new mongoose.Schema({
   email: String,
   password: String,
@@ -40,32 +44,41 @@ app.get('/register', function (req, res) {
   res.render('register');
 });
 app.post('/register', function (req, res) {
-  const newUser = new User({
-    email: req.body.username,
-    password: md5(req.body.password),
-  });
-  newUser
-    //   activate mongoose encrypt
-    .save()
-    .then((result) => {
-      console.log(result);
-      res.render('secrets');
-    })
-    .catch((err) => {
-      console.log(err);
+  bcrypt.hash(req.body.password, saltRounds).then(function (hash) {
+    // Store hash in your password DB.
+    const newUser = new User({
+      email: req.body.username,
+      password: hash,
     });
+    newUser
+      //   activate mongoose encrypt
+      .save()
+      .then((result) => {
+        console.log(result);
+        res.render('secrets');
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
 });
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  const pass = md5(req.body.password);
+  const pass = req.body.password;
   // activate mongoose decrypt
   User.findOne({ email: username }).then((foundUser) => {
     if (foundUser) {
-      if (foundUser.password == pass) {
-        res.render('secrets');
-      } else {
-        res.send('wrong password');
-      }
+      // Load hash from your password DB.
+      bcrypt
+        .compare(req.body.password, foundUser.password)
+        .then(function (result) {
+          if (result == true) {
+            res.render('secrets');
+          }
+        })
+        .catch(function (e) {
+          console.log(e);
+        });
     } else {
       res.send('user not found');
     }
