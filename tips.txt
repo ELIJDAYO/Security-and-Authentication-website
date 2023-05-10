@@ -19,5 +19,11 @@ salting and hashing module:
     
     npm install bcryptjs
 
-cookies and session modules:
+cookies and session module:
 npm i passport passport-local passport-local-mongoose express-session
+
+OAuth 2.0, signin with google module:
+    npm install passport-google-oauth20
+    go to google cloud api&services credentials
+    npm install mongoose-findorcreate
+    npm i dotenv?
