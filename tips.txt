@@ -19,3 +19,5 @@ salting and hashing module:
     
     npm install bcryptjs
 
+cookies and session modules:
+npm i passport passport-local passport-local-mongoose express-session

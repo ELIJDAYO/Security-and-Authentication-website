@@ -5,6 +5,10 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const session = require('express-session');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
+
 const saltRounds = 10;
 
 main().catch((err) => console.log('err'));
@@ -20,6 +24,17 @@ app.use(
   })
 );
 
+app.use(
+  session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // use public folder to store static file like css and img
 app.use(express.static('public'));
 
@@ -31,7 +46,14 @@ const userSchema = new mongoose.Schema({
   password: String,
 });
 
+userSchema.plugin(passportLocalMongoose);
+
 const User = new mongoose.model('User', userSchema);
+// local login strategy
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 //TODO
 app.get('/', function (req, res) {
@@ -43,47 +65,53 @@ app.get('/login', function (req, res) {
 app.get('/register', function (req, res) {
   res.render('register');
 });
-app.post('/register', function (req, res) {
-  bcrypt.hash(req.body.password, saltRounds).then(function (hash) {
-    // Store hash in your password DB.
-    const newUser = new User({
-      email: req.body.username,
-      password: hash,
-    });
-    newUser
-      //   activate mongoose encrypt
-      .save()
-      .then((result) => {
-        console.log(result);
-        res.render('secrets');
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+app.get('/secrets', function (req, res) {
+  if (req.isAuthenticated()) {
+    res.render('secrets');
+  } else {
+    res.redirect('/login');
+  }
+});
+app.get('/logout', function (req, res, next) {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
   });
+});
+app.post('/register', function (req, res) {
+  User.register(
+    { username: req.body.username },
+    req.body.password,
+    function (err, user) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(req.body.username);
+        passport.authenticate('local')(req, res, function () {
+          res.redirect('/secrets');
+        });
+      }
+    }
+  );
 });
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  const pass = req.body.password;
-  // activate mongoose decrypt
-  User.findOne({ email: username }).then((foundUser) => {
-    if (foundUser) {
-      // Load hash from your password DB.
-      bcrypt
-        .compare(req.body.password, foundUser.password)
-        .then(function (result) {
-          if (result == true) {
-            res.render('secrets');
-          }
-        })
-        .catch(function (e) {
-          console.log(e);
-        });
-    } else {
-      res.send('user not found');
-    }
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password,
+  });
+
+  passport.authenticate('local')(req, res, function () {
+    req.logIn(user, function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
+    res.redirect('/secrets');
   });
 });
+
 app.listen(3000, function () {
   console.log('Server started on port 3000');
 });
